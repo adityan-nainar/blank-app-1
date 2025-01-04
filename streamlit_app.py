@@ -1,47 +1,31 @@
-import streamlit as st 
-from pandasai.llm.openai import OpenAI
-from dotenv import load_dotenv
-import os
+import streamlit as st
 import pandas as pd
-from pandasai import PandasAI
+import openai
+from openai import OpenAI
 
-load_dotenv()
+st.title("CSV Query Engine")
 
+openai.api_key = st.secrets["OPENAI_API_KEY"]
+client = OpenAI()
 
-openai_api_key = st.secrets["OPENAI_API_KEY"]
+def get_answer(df, question):
+    data_info = f"Columns: {', '.join(df.columns)}\nSample data:\n{df.head().to_string()}"
+    
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": f"You're analyzing this dataset:\n{data_info}"},
+            {"role": "user", "content": question}
+        ]
+    )
+    return response.choices[0].message.content
 
-
-def chat_with_csv(df,prompt):
-    llm = OpenAI(api_token=openai_api_key)
-    pandas_ai = PandasAI(llm)
-    result = pandas_ai.run(df, prompt=prompt)
-    print(result)
-    return result
-
-st.set_page_config(layout='wide')
-
-st.title("ChatCSV powered by LLM")
-
-input_csv = st.file_uploader("Upload your CSV file", type=['csv'])
-
-if input_csv is not None:
-
-        col1, col2 = st.columns([1,1])
-
-        with col1:
-            st.info("CSV Uploaded Successfully")
-            data = pd.read_csv(input_csv)
-            st.dataframe(data, use_container_width=True)
-
-        with col2:
-
-            st.info("Chat Below")
-            
-            input_text = st.text_area("Enter your query")
-
-            if input_text is not None:
-                if st.button("Chat with CSV"):
-                    st.info("Your Query: "+input_text)
-                    result = chat_with_csv(data, input_text)
-                    st.success(result)
-
+uploaded_file = st.file_uploader("Upload CSV", type='csv')
+if uploaded_file:
+    df = pd.read_csv(uploaded_file)
+    st.dataframe(df)
+    
+    question = st.text_input("Ask about your data:")
+    if question and st.button("Get Answer"):
+        answer = get_answer(df, question)
+        st.write(answer)
