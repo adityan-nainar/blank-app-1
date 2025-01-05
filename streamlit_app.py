@@ -76,7 +76,7 @@ def get_answer(df, question):
         Return ONLY the exact code to run, nothing else."""
         
         code_response = client.chat.completions.create(
-            model="gpt-4-turbo-preview",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a pandas code generator. Return only executable code that uses DataFrame operations. No explanations or markdown."},
                 {"role": "user", "content": code_prompt}
@@ -124,7 +124,7 @@ def get_answer(df, question):
             """
             
             explanation = client.chat.completions.create(
-                model="gpt-4-turbo-preview",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "You are a business analyst. Provide direct answers using ONLY the exact numbers provided. Never make assumptions or add information not in the data."},
                     {"role": "user", "content": explanation_prompt}
